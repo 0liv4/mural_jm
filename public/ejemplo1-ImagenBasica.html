@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Canvas Ejemplo 1</title>
+</head>
+<body>
+    <h2>Ejemplo 1: Imagen Básica</h2>
+    <canvas id="miLienzo" width="500" height="500" style="border:1px solid #000;"></canvas>
+    
+
+    <img id="fotoOrigen" src="https://picsum.photos/500/500" style="display: none;" alt="Foto de prueba">
+
+    <script>
+        window.onload = function() {
+            const canvas = document.getElementById('miLienzo');
+            const ctx = canvas.getContext('2d'); 
+            const img = document.getElementById('fotoOrigen');
+
+            
+            ctx.drawImage(img, 0, 0);
+        };
+    </script>
+</body>
+</html>
