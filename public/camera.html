@@ -1,0 +1,32 @@
+<script>
+    const video = document.getElementById('videoCamara');
+    const btnCapturar = document.getElementById('btnCapturar');
+    const canvas = document.getElementById('lienzoFoto');
+    const ctx = canvas.getContext('2d');
+
+    // 1. Encender la cámara
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+        .then(function(stream) {
+            video.srcObject = stream;
+        })
+        .catch(function(error) {
+            console.error("Error con la cámara: ", error);
+        });
+
+    // 2. Hacer la foto al hacer clic
+    btnCapturar.addEventListener('click', function() {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        const datosImagen = canvas.toDataURL('image/webp', 0.8);
+        console.log("¡Foto capturada!", datosImagen);
+        
+        // Extra: Mostrar el canvas para que veáis la foto tomada
+        canvas.style.display = "block"; 
+        canvas.style.width = "100%";
+        canvas.style.maxWidth = "400px";
+        canvas.style.border = "2px solid red";
+    });
+</script>
