@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Pantalla Mural en Directo</title>
+    <style>
+        /* Estilos para que la pantalla se vea en negro y la foto centrada */
+        body { margin: 0; background: #000; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; font-family: Arial;}
+        canvas { max-width: 100%; max-height: 100%; box-shadow: 0 0 20px rgba(255, 255, 255, 0.2); }
+    </style>
+</head>
+<body>
+
+    <h2 id="mensaje">Conectando con el escenario...</h2>
+    
+    <!-- El lienzo gigante del concierto -->
+    <canvas id="muralCanvas" width="1280" height="720" style="display: none;"></canvas>
+
+    <script>
+        const canvas = document.getElementById('muralCanvas');
+        const ctx = canvas.getContext('2d');
+        const mensaje = document.getElementById('mensaje');
+
+        function actualizarMural() {
+            // 1. Llamar a nuestro servidor PHP usando fetch
+            fetch('../api/get-photos.php')
+                .then(respuesta => respuesta.json()) // Transformar la respuesta de JSON a JavaScript
+                .then(listaDeFotos => {
+                    
+                    if (listaDeFotos.length > 0) {
+                        // 2. Lógica de aleatoriedad
+                        // Math.random() genera un número, lo multiplicamos por la cantidad de fotos
+                        const indiceAleatorio = Math.floor(Math.random() * listaDeFotos.length);
+                        const fotoElegida = listaDeFotos[indiceAleatorio];
+
+                        // 3. Cargar la imagen y dibujarla en el Canvas
+                        const img = new Image();
+                        // Buscamos la foto en la carpeta uploads/event_1
+                        img.src = '../uploads/event_1/' + fotoElegida;
+                        
+                        img.onload = () => {
+                            mensaje.style.display = 'none'; // Ocultamos el texto
+                            canvas.style.display = 'block'; // Mostramos el canvas
+                            
+                            // Dibujamos la foto ocupando todo el lienzo
+                            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        };
+                    } else {
+                        mensaje.innerText = "Esperando las primeras fotos del público...";
+                    }
+                })
+                .catch(error => {
+                    console.error("Error conectando con la base de datos:", error);
+                });
+        }
+
+        // Ejecutamos la función nada más abrir la página
+        actualizarMural();
+
+        // 4. POLLING: Le decimos a JavaScript que repita esta función cada 5000 milisegundos (5 segundos)
+        setInterval(actualizarMural, 5000);
+    </script>
+</body>
+</html>
