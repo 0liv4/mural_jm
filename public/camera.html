@@ -1,33 +1,10 @@
+<!DOCTYPE html>
+<html lang="es">
+<body>
+    <video id="videoCamara" autoplay playsinline style="width: 100%; max-width: 400px;"></video>
+    <button id="btnCapturar">Hacer foto</button>
+    <canvas id="lienzoFoto" style="display: none;"></canvas>
 
-<script>
-    const video = document.getElementById('videoCamara');
-    const btnCapturar = document.getElementById('btnCapturar');
-    const canvas = document.getElementById('lienzoFoto');
-    const ctx = canvas.getContext('2d');
-
-    
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-        .then(function(stream) {
-            video.srcObject = stream;
-        })
-        .catch(function(error) {
-            console.error("Error con la cámara: ", error);
-        });
-
-    
-    btnCapturar.addEventListener('click', function() {
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        
-        const datosImagen = canvas.toDataURL('image/webp', 0.8);
-        console.log("¡Foto capturada!", datosImagen);
-        
-        
-        canvas.style.display = "block"; 
-        canvas.style.width = "100%";
-        canvas.style.maxWidth = "400px";
-        canvas.style.border = "2px solid red";
-    });
-</script>
+    <script src="js/camera.js"></script>
+</body>
+</html>
