@@ -3,7 +3,6 @@ const ctx = canvas.getContext('2d');
 const mensaje = document.getElementById('mensaje');
 
 function actualizarMural() {
-    // 1. Llamar a nuestro servidor PHP usando fetch [cite: 11]
     fetch('../api/get-photos.php')
         .then(respuesta => respuesta.json()) 
         .then(listaDeFotos => {
@@ -12,13 +11,21 @@ function actualizarMural() {
                 const fotoElegida = listaDeFotos[indiceAleatorio];
 
                 const img = new Image();
-                // Buscamos la foto en la carpeta uploads [cite: 43]
                 img.src = '../uploads/event_1/' + fotoElegida;
                 
                 img.onload = () => {
                     mensaje.style.display = 'none'; 
                     canvas.style.display = 'block'; 
+                    
+                    // 1. Dibujamos la foto
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                    // 2. Añadimos el texto encima
+                    ctx.fillStyle = "white"; // Color de la letra
+                    ctx.font = "bold 40px Arial"; // Estilo y tamaño
+                    ctx.shadowColor = "black"; // Sombra para que se lea en cualquier foto
+                    ctx.shadowBlur = 10;
+                    ctx.fillText("CONCIERTO 2026 - IES BARAJAS", 50, 60);
                 };
             } else {
                 mensaje.innerText = "Esperando las primeras fotos del público...";
@@ -30,4 +37,4 @@ function actualizarMural() {
 }
 
 actualizarMural();
-setInterval(actualizarMural, 5000); // Polling cada 5 segundos [cite: 89]
+setInterval(actualizarMural, 5000);

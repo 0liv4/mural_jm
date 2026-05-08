@@ -3,18 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <title>Pantalla Mural en Directo</title>
-    <style>
-        /* Estilos para que la pantalla se vea en negro y la foto centrada */
-        body { margin: 0; background: #000; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; font-family: Arial;}
-        canvas { max-width: 100%; max-height: 100%; box-shadow: 0 0 20px rgba(255, 255, 255, 0.2); }
-    </style>
+    <link rel="stylesheet" href="css/screen.css">
 </head>
 <body>
 
     <h2 id="mensaje">Conectando con el escenario...</h2>
     
-    <!-- El lienzo gigante del concierto -->
     <canvas id="muralCanvas" width="1280" height="720" style="display: none;"></canvas>
+
+    <div class="marquesina">
+        ¡Bienvenidos al Mural del IES Barajas! Envíad vuestras fotos al escenario...
+    </div>
 
     <script src="js/screen.js"></script>
 </body>

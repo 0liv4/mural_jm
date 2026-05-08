@@ -15,18 +15,21 @@
 
     try {
         
-        $sql = "SELECT nombre FROM usuarios LIMIT 1";
-        $stmt = $conn->query($sql);
-        
-       
-        $fila = $stmt->fetch(PDO::FETCH_ASSOC);
+       // ... dentro del bloque try en index.php ...
 
-        if ($fila) {
-            echo "<h2 style='color: #155724;'>¡Lectura de datos exitoss!</h2>";
-            echo "<p style='font-size: 1.5em;'>Usuario encontrado: <strong>" . $fila['nombre'] . "</strong></p>";
-        } else {
-            echo "<h2 style='color: orange;'>Conectado, pero la tabla usuarios está vacía.</h2>";
-        }
+// 1. Cambiamos 'nombre' por 'username' y 'usuarios' por 'users'
+$sql = "SELECT username FROM users LIMIT 1"; 
+$stmt = $conn->query($sql);
+
+$fila = $stmt->fetch(PDO::FETCH_ASSOC);
+
+if ($fila) {
+    echo "<h2 style='color: #155724;'>¡Lectura de datos exitosa!</h2>";
+    // 2. Cambiamos ['nombre'] por ['username'] para que coincida con la tabla
+    echo "<p style='font-size: 1.5em;'>Usuario encontrado: <strong>" . $fila['username'] . "</strong></p>";
+} else {
+    echo "<h2 style='color: orange;'>Conectado, pero la tabla 'users' está vacía.</h2>";
+}
 
     } catch (Exception $e) {
         echo "<h2 style='color: red;'>Error al consultar la base de datos: " . $e->getMessage() . "</h2>";
