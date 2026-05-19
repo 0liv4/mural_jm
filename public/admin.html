@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Panel de Moderación</title>
+    <style>
+        body { font-family: Arial; background: #f4f4f4; padding: 20px; }
+        .galeria { display: flex; flex-wrap: wrap; gap: 20px; }
+        .tarjeta { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); text-align: center; }
+        img { max-width: 250px; border-radius: 4px; display: block; margin-bottom: 15px; }
+        .btn-aprobar { background: #4CAF50; color: white; border: none; padding: 10px 15px; cursor: pointer; border-radius: 4px; font-weight: bold;}
+        .btn-rechazar { background: #f44336; color: white; border: none; padding: 10px 15px; cursor: pointer; border-radius: 4px; font-weight: bold;}
+    </style>
+</head>
+<body>
+    <h1> Panel de Moderación - Fotos Pendientes</h1>
+
+    <div style="background: #e9ecef; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+        <h2> Crear Nuevo Evento</h2>
+        <form id="formNuevoEvento" style="display: flex; gap: 10px;">
+            <input type="text" id="nombreEvento" placeholder="Ej: Graduación 2026" required style="padding: 10px; width: 300px; border-radius: 4px; border: 1px solid #ccc;">
+            <button type="submit" style="background: #2196F3; color: white; border: none; padding: 10px 15px; cursor: pointer; border-radius: 4px; font-weight: bold;">Crear y Generar Carpeta</button>
+        </form>
+    </div>
+    <div style="background: #e9ecef; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+        <h2>🎛️ Gestión de Eventos</h2>
+        <ul id="listaEventos" style="list-style: none; padding: 0;">
+            </ul>
+    </div>
+    <hr style="margin-bottom: 20px;">
+    <div id="galeriaPendientes" class="galeria">
+        </div>
+
+    <script src="js/admin.js"></script>
+</body>
+</html>
