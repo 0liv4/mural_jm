@@ -14,11 +14,9 @@ navigator.mediaDevices.getUserMedia({
 .then(function(stream) {
     video.srcObject = stream;
 
-   
     video.setAttribute('playsinline', true); 
     video.setAttribute('muted', true); 
     video.muted = true; 
-    
     
     video.play(); 
 })
@@ -27,24 +25,48 @@ navigator.mediaDevices.getUserMedia({
     alert("No se ha podido acceder a la cámara. Comprueba los permisos.");
 });
 
-
+// 2. Hacer la foto al hacer clic (Con redimensionamiento integrado)
 btnCapturar.addEventListener('click', function() {
     
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+    // Obtenemos el tamaño real del stream de vídeo del móvil
+    let anchoOriginal = video.videoWidth;
+    let altoOriginal = video.videoHeight;
+
+    
+    const MAX_ANCHO = 1500;
+    const MAX_ALTO = 800;
+
+    let anchoFinal = anchoOriginal;
+    let altoFinal = altoOriginal;
+
+    // Calculamos la proporción 
+    let ratiodeAncho = MAX_ANCHO / anchoOriginal;
+    let ratiodeAlto = MAX_ALTO / altoOriginal;
+    
+   //para no pasar del limite
+    let ratioEscala = Math.min(ratiodeAncho, ratiodeAlto);
+
+    if (ratioEscala < 1) {
+        anchoFinal = anchoOriginal * ratioEscala;
+        altoFinal = altoOriginal * ratioEscala;
+    }
+
+    // Ajustamos al tamaño máximo permitido y redimensionado
+    canvas.width = anchoFinal;
+    canvas.height = altoFinal;
     
     
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     
-
+   
     const datosImagen = canvas.toDataURL('image/webp', 0.8);
 
- 
+    // preparar el envío 
     const formData = new FormData();
     formData.append('imagen', datosImagen);
     formData.append('event_id', 1); 
 
-  
+    // mandamos a la api
     fetch('../api/upload-photo.php', {
         method: 'POST',
         body: formData
@@ -53,7 +75,6 @@ btnCapturar.addEventListener('click', function() {
     .then(data => {
         if(data.success) {
             alert("¡Foto enviada al mural!");
-            
         } else {
             alert("Error al subir: " + data.error);
         }
@@ -63,9 +84,9 @@ btnCapturar.addEventListener('click', function() {
         alert("Error de conexión con el servidor.");
     });
 
-    console.log("¡Foto capturada!", datosImagen);
+    console.log("¡Foto capturada y escalada a " + anchoFinal + "x" + altoFinal + "px!");
     
-   
+    // mostramos la foto 
     canvas.style.display = "block"; 
     canvas.style.width = "100%";
     canvas.style.maxWidth = "400px";
