@@ -1,88 +1,122 @@
+// Referencias a las pantallas
+const pantallaAviso = document.getElementById('pantallaAviso');
+const pantallaCamara = document.getElementById('pantallaCamara');
+const pantallaError = document.getElementById('pantallaError');
+const pantallaPrevia = document.getElementById('pantallaPrevia');
+const pantallaExito = document.getElementById('pantallaExito');
+
+// Referencias a los elementos
+const btnAceptarAviso = document.getElementById('btnAceptarAviso');
 const video = document.getElementById('videoCamara');
 const btnCapturar = document.getElementById('btnCapturar');
 const canvas = document.getElementById('lienzoFoto');
 const ctx = canvas.getContext('2d');
 
-// 1. Encender la cámara (Con la configuración avanzada de Marco)
-navigator.mediaDevices.getUserMedia({ 
-    video: { 
-        facingMode: "environment", // Intenta usar la trasera por defecto
-        width: { ideal: 1280 },
-        height: { ideal: 720 }
-    } 
-})
-.then(function(stream) {
-    video.srcObject = stream;
-    video.setAttribute('playsinline', true); 
-    video.setAttribute('muted', true); 
-    video.muted = true; 
-    video.play(); 
-})
-.catch(function(error) {
-    console.error("Error con la cámara: ", error);
-    alert("No se ha podido acceder a la cámara. Comprueba los permisos en la barra de direcciones.");
+const btnRepetir = document.getElementById('btnRepetir');
+const btnEnviar = document.getElementById('btnEnviar');
+const btnVolverCamara = document.getElementById('btnVolverCamara');
+
+// Variable para guardar la foto temporalmente
+let fotoListaParaEnviar = null;
+
+// 1. Aceptar permisos y encender cámara
+btnAceptarAviso.addEventListener('click', function() {
+    pantallaAviso.classList.remove('activa');
+    
+    navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } } 
+    })
+    .then(function(stream) {
+        pantallaCamara.classList.add('activa');
+        video.srcObject = stream;
+        video.setAttribute('playsinline', true); 
+        video.setAttribute('muted', true); 
+        video.muted = true; 
+        video.play(); 
+    })
+    .catch(function(error) {
+        console.error("Error con la cámara: ", error);
+        if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+            pantallaError.classList.add('activa');
+        } else {
+            alert("Error técnico al intentar acceder a la cámara.");
+            pantallaAviso.classList.add('activa'); 
+        }
+    });
 });
 
-// 2. Hacer la foto al hacer clic (Con redimensionamiento integrado)
+// 2. Hacer la foto y mostrar previsualización
 btnCapturar.addEventListener('click', function() {
-    
-    // Obtenemos el tamaño real del stream de vídeo del móvil
     let anchoOriginal = video.videoWidth;
     let altoOriginal = video.videoHeight;
-
     const MAX_ANCHO = 1500;
     const MAX_ALTO = 800;
 
     let anchoFinal = anchoOriginal;
     let altoFinal = altoOriginal;
-
-    // Calculamos la proporción 
-    let ratiodeAncho = MAX_ANCHO / anchoOriginal;
-    let ratiodeAlto = MAX_ALTO / altoOriginal;
-    
-    // Para no pasar del límite
-    let ratioEscala = Math.min(ratiodeAncho, ratiodeAlto);
+    let ratioEscala = Math.min(MAX_ANCHO / anchoOriginal, MAX_ALTO / altoOriginal);
 
     if (ratioEscala < 1) {
         anchoFinal = anchoOriginal * ratioEscala;
         altoFinal = altoOriginal * ratioEscala;
     }
 
-    // Ajustamos el lienzo al tamaño máximo permitido y redimensionado
     canvas.width = anchoFinal;
     canvas.height = altoFinal;
-    
-    // Dibujamos el fotograma 
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     
-    // Convertir la foto a formato WebP 
-    const datosImagen = canvas.toDataURL('image/webp', 0.8);
-    console.log("¡Foto capturada y escalada a " + anchoFinal + "x" + altoFinal + "px!");
+    // Guardamos la imagen en la variable global para usarla luego
+    fotoListaParaEnviar = canvas.toDataURL('image/webp', 0.8);
     
-    // Mostramos la foto en pantalla para que el usuario la vea
-    canvas.style.display = "block"; 
-    canvas.style.width = "100%";
-    canvas.style.maxWidth = "400px";
-    canvas.style.border = "2px solid red";
+    // Cambiamos a la pantalla de previsualización
+    pantallaCamara.classList.remove('activa');
+    pantallaPrevia.classList.add('activa');
+});
 
-    // 3. Enviamos la foto al archivo PHP usando JSON (Compatible con nuestro backend)
+// 3. Botón Repetir: Vuelve a la cámara
+btnRepetir.addEventListener('click', function() {
+    fotoListaParaEnviar = null; // Limpiamos la foto descartada
+    pantallaPrevia.classList.remove('activa');
+    pantallaCamara.classList.add('activa');
+});
+
+// 4. Botón Enviar: Manda la foto al servidor de Marco
+btnEnviar.addEventListener('click', function() {
+    
+    // Ponemos el botón en "estado de carga" visualmente
+    btnEnviar.disabled = true;
+    btnEnviar.innerText = "Enviando...";
+
+    const formData = new FormData();
+    formData.append('imagen', fotoListaParaEnviar);
+
     fetch('../api/upload-photo.php', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ imagen: datosImagen })
+        body: formData
     })
-    .then(respuesta => respuesta.json())
-    .then(datos => {
-        if(datos.exito) {
-            alert("¡Foto enviada! Está en estado 'pending' esperando revisión.");
+    .then(res => res.json())
+    .then(data => {
+        btnEnviar.disabled = false;
+        btnEnviar.innerText = "Enviar foto";
+
+        if(data.success) {
+            // Si va bien, mostramos la pantalla de éxito
+            pantallaPrevia.classList.remove('activa');
+            pantallaExito.classList.add('activa');
         } else {
-            alert("Error del servidor: " + datos.error);
+            alert("Error del servidor: " + data.error);
         }
     })
-    .catch(error => {
-        console.error("Error al enviar la foto:", error);
+    .catch(err => {
+        btnEnviar.disabled = false;
+        btnEnviar.innerText = "Enviar foto";
+        console.error("Error en la subida:", err);
         alert("Fallo de conexión al intentar enviar la foto.");
     });
+});
+
+// 5. Botón Volver (Hacer otra foto tras el éxito)
+btnVolverCamara.addEventListener('click', function() {
+    pantallaExito.classList.remove('activa');
+    pantallaCamara.classList.add('activa');
 });

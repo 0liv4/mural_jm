@@ -1,15 +1,4 @@
 <?php
-header('Content-Type: application/json');
-
-
-$host = 'localhost';
-$user = 'root';     
-$pass = '';         
-$db   = 'mural_jm'; 
-
-$conn = new mysqli($host, $user, $pass, $db);
-if ($conn->connect_error) {
-    die(json_encode(["error" => "Error de conexión BD"]));
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
@@ -19,14 +8,14 @@ require_once '../config/db.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
-    
+    // --- TAREA: Impedir subir fotos si no hay evento activo ---
     try {
         $sqlEvento = "SELECT id FROM events WHERE active = 1 LIMIT 1";
         $stmtEvento = $conn->prepare($sqlEvento);
         $stmtEvento->execute();
         $eventoActivo = $stmtEvento->fetch(PDO::FETCH_ASSOC);
 
-       
+        // Controlamos si viene vacío
         if ($eventoActivo === false || !isset($eventoActivo['id'])) {
             echo json_encode([
                 'success' => false, 
@@ -35,7 +24,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
 
-        // si ha pasado el filtro, guardamos el ID real 
         $realEventId = $eventoActivo['id'];
 
     } catch (Exception $e) {
@@ -46,14 +34,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    // Recogemos la imagen que viene d
+    // Recogemos la imagen que viene del JavaScript (FormData)
     $data = $_POST['imagen'] ?? '';
     if (empty($data)) {
         echo json_encode(['success' => false, 'error' => 'No se han recibido datos de la imagen.']);
         exit;
     }
 
-    
+    // --- TAREA: Validar que solo se suben imágenes JPG, PNG o WEBP ---
     $formatoValido = false;
     $extension = '';
 
@@ -65,7 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $data = str_replace('data:image/jpeg;base64,', '', $data);
         $extension = 'jpg';
         $formatoValido = true;
-    } elseif (strpos($data, 'data:image/png;base64,', 0) === 0) {
+    } elseif (strpos($data, 'data:image/png;base64,') === 0) {
         $data = str_replace('data:image/png;base64,', '', $data);
         $extension = 'png';
         $formatoValido = true;
@@ -76,19 +64,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-  
+    // Decodificamos el string Base64
     $data = str_replace(' ', '+', $data);
     $datosImagen = base64_decode($data);
 
-   
+    // --- TAREA: Renombrar archivos subidos automáticamente ---
     $nombreArchivo = 'foto_' . time() . '_' . substr(md5(uniqid()), 0, 6) . '.' . $extension;
 
-    
+    // --- TAREA: Guardar cada foto en la carpeta del evento activo ---
     $rutaDestino = '../uploads/event_' . $realEventId . '/' . $nombreArchivo;
 
+    // Intentamos guardar el archivo físico
     if (file_put_contents($rutaDestino, $datosImagen)) {
         try {
-            
+            // --- TAREA: Guardar estado de la foto (pending) ---
             $estadoInicial = 'pending'; 
 
             $sql = "INSERT INTO photos (event_id, file_name, active, status) 
@@ -107,52 +96,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         echo json_encode(['success' => false, 'error' => 'No se pudo guardar el archivo físico. Comprueba los permisos de la carpeta uploads.']);
     }
 }
-
-
-$datos = json_decode(file_get_contents("php://input"), true);
-if (!isset($datos['imagen'])) {
-    die(json_encode(["error" => "No se recibió ninguna imagen."]));
-}
-
-
-$sqlEvento = "SELECT id FROM events WHERE active = 1 LIMIT 1";
-$resultadoEvento = $conn->query($sqlEvento);
-if ($resultadoEvento->num_rows === 0) {
-    die(json_encode(["error" => "No hay ningún evento activo en este momento."]));
-}
-$evento = $resultadoEvento->fetch_assoc();
-$idEvento = $evento['id'];
-
-
-$imagenBase64 = $datos['imagen'];
-$imagenBase64 = str_replace('data:image/webp;base64,', '', $imagenBase64);
-$imagenBase64 = str_replace(' ', '+', $imagenBase64);
-$datosArchivo = base64_decode($imagenBase64);
-
-
-$nombreArchivo = 'foto_' . uniqid() . '.webp';
-    
-
-$rutaCarpeta = '../uploads/event_' . $idEvento . '/';
-$rutaFinal = $rutaCarpeta . $nombreArchivo;
-    
-
-if (!file_exists($rutaCarpeta)) {
-    mkdir($rutaCarpeta, 0777, true);
-}
-    
-file_put_contents($rutaFinal, $datosArchivo);
-
-
-$sqlInsert = "INSERT INTO photos (event_id, file_name, status, active) VALUES (?, ?, 'pending', 1)";
-$stmt = $conn->prepare($sqlInsert);
-$stmt->bind_param("is", $idEvento, $nombreArchivo);
-    
-if ($stmt->execute()) {
-    echo json_encode(["exito" => true]);
-} else {
-    echo json_encode(["error" => "Error al guardar en la base de datos."]);
-}
-
-$conn->close();
 ?>

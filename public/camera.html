@@ -6,7 +6,6 @@
     <title>Cámara Mural JM</title>
 
     <style>
-        
         body { 
             margin: 0; 
             background: #121212; 
@@ -19,7 +18,33 @@
             min-height: 100vh; 
         }
         
-        video { 
+        .pantalla {
+            display: none; 
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            width: 100%;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .pantalla.activa {
+            display: flex;
+        }
+
+        .caja-aviso {
+            background: #1e1e1e;
+            padding: 25px;
+            border-radius: 15px;
+            max-width: 400px;
+            border: 1px solid #333;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .caja-aviso h2 { margin-top: 0; color: #e63946; }
+        .caja-aviso p { line-height: 1.5; color: #ccc; }
+
+        video, canvas { 
             width: 90%; 
             max-width: 500px; 
             border-radius: 15px; 
@@ -28,9 +53,9 @@
         }
 
         button {
-            margin-top: 30px;
-            padding: 15px 40px;
-            font-size: 1.2rem;
+            margin-top: 20px;
+            padding: 15px 30px;
+            font-size: 1.1rem;
             font-weight: bold;
             color: white;
             background: #e63946;
@@ -38,18 +63,62 @@
             border-radius: 50px;
             cursor: pointer;
             box-shadow: 0 4px 15px rgba(230, 57, 70, 0.4);
+            transition: transform 0.1s;
         }
 
-        button:active {
-            transform: scale(0.95); 
+        button:active { transform: scale(0.95); }
+        
+        .btn-secundario { background: #555; box-shadow: none; }
+        
+        .botones-accion {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
         }
     </style>
 </head>
 <body>
 
-    <video id="videoCamara" autoplay playsinline></video>
-    <button id="btnCapturar">Hacer foto</button>
-    <canvas id="lienzoFoto" style="display: none;"></canvas>
+    <div id="pantallaAviso" class="pantalla activa">
+        <div class="caja-aviso">
+            <h2>Aviso de Privacidad</h2>
+            <p>Para participar en el Mural interactivo, necesitamos acceder a la cámara de tu dispositivo.</p>
+            <p>Al continuar, aceptas que tu fotografía sea procesada y mostrada públicamente en la pantalla del evento.</p>
+            <button id="btnAceptarAviso">Acepto y abrir cámara</button>
+        </div>
+    </div>
+
+    <div id="pantallaCamara" class="pantalla">
+        <video id="videoCamara" autoplay playsinline></video>
+        <button id="btnCapturar">Hacer foto</button>
+    </div>
+
+    <div id="pantallaError" class="pantalla">
+        <div class="caja-aviso">
+            <h2>Permiso Denegado</h2>
+            <p>No podemos abrir la cámara porque has rechazado los permisos.</p>
+            <p>Por favor, recarga la página o cambia la configuración de tu navegador.</p>
+            <button class="btn-secundario" onclick="window.location.reload()">Recargar página</button>
+        </div>
+    </div>
+
+    <div id="pantallaPrevia" class="pantalla">
+        <canvas id="lienzoFoto"></canvas>
+        <div class="botones-accion">
+            <button id="btnRepetir" class="btn-secundario">Repetir foto</button>
+            <button id="btnEnviar">Enviar foto</button>
+        </div>
+    </div>
+
+    <div id="pantallaExito" class="pantalla">
+        <div class="caja-aviso">
+            <h2 style="color: #4CAF50;">¡Foto enviada!</h2>
+            <p>Foto enviada correctamente. Está pendiente de revisión por el administrador.</p>
+            <button id="btnVolverCamara">Hacer otra foto</button>
+        </div>
+    </div>
 
     <script src="js/camera.js"></script>
 </body>
