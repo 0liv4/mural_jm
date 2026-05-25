@@ -8,13 +8,23 @@
 </head>
 <body>
 
+    <div id="fondoEscenario"></div>
+
     <h2 id="mensaje">Conectando con el escenario...</h2>
     
     <canvas id="muralCanvas" width="1280" height="720" style="display: none;"></canvas>
 
+    <div id="qrContenedor" style="display: none; position: absolute; bottom: 80px; right: 40px; background: white; padding: 15px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-align: center; z-index: 100;">
+        <p style="margin: 0 0 10px 0; font-weight: bold; color: #333; font-family: sans-serif; font-size: 18px;">📸 ¡Envía tu foto!</p>
+        <img id="qrImagen" src="" alt="Código QR del Evento" width="150" height="150">
+    </div>
+
     <div class="marquesina">
         ¡Bienvenidos al Mural del IES Barajas! Envíad vuestras fotos al escenario...
     </div>
+
+    <script src="js/data-manager.js"></script>
+    <script src="js/background-manager.js"></script>
 
     <script src="js/screen.js?v=2"></script>
 </body>

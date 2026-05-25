@@ -1,58 +1,57 @@
 <?php
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
-
 header('Content-Type: application/json');
-require_once '../config/db.php';
 
-// verificar qué evento está activo
+// Conexión PDO (la tuya segura)
+$host = 'localhost';
+$dbname = 'mural_jm';
+$username = 'root';
+$password = '';
+
 try {
-    $sqlEvento = "SELECT id FROM events WHERE active = 1 LIMIT 1";
-    $stmtEvento = $conn->prepare($sqlEvento);
-    $stmtEvento->execute();
-    $eventoActivo = $stmtEvento->fetch(PDO::FETCH_ASSOC);
+    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch (PDOException $e) {
+    die(json_encode(["error" => "Error de conexión a la base de datos"]));
+}
 
-    if (!$eventoActivo) {
-        echo json_encode([]); // wi no hay evento activo, devolvemos array vacío
-        exit;
-    }
+// 1. Buscamos el evento activo (Vital del archivo viejo)
+$stmtEvento = $pdo->query("SELECT id FROM events WHERE active = 1 LIMIT 1");
+$evento = $stmtEvento->fetch(PDO::FETCH_ASSOC);
 
-    $realEventId = $eventoActivo['id'];
-
-} catch (Exception $e) {
-    echo json_encode(['error' => 'Error al buscar evento activo: ' . $e->getMessage()]);
+if (!$evento) {
+    echo json_encode([]); // Si no hay evento, devolvemos array vacío
     exit;
 }
 
-// recorrer las fotos aprobadas 
-try {
-    // Miramos s nos está pasando el ID de la última foto que ya tiene hecha
-    $lastId = isset($_GET['last_id']) ? (int)$_GET['last_id'] : 0;
+$idEvento = $evento['id'];
 
-    if ($lastId > 0) {
-        
-        // cogemos solo las fotos aprobadas del evento actual cuyo ID sea mayor que el último que ya vemos
-        $sqlPhotos = "SELECT id, file_name FROM photos 
-                      WHERE event_id = ? AND status = 'approved' AND id > ? 
-                      ORDER BY id ASC";
-        $stmtPhotos = $conn->prepare($sqlPhotos);
-        $stmtPhotos->execute([$realEventId, $lastId]);
-    } else {
-        
-        // si el mural se acaba de abrir por primera vez, se trae todas las aprobadas de una
-        $sqlPhotos = "SELECT id, file_name FROM photos 
-                      WHERE event_id = ? AND status = 'approved' 
-                      ORDER BY id ASC";
-        $stmtPhotos = $conn->prepare($sqlPhotos);
-        $stmtPhotos->execute([$realEventId]);
-    }
+// 2. Cogemos el last_id que nos manda tu JS para no repetir datos (Tu optimización)
+$last_id = isset($_GET['last_id']) ? (int)$_GET['last_id'] : 0;
 
-    $photos = $stmtPhotos->fetchAll(PDO::FETCH_ASSOC);
+// 3. Buscamos SOLO las fotos nuevas de ESE evento en concreto
+$sql = "SELECT id, file_name FROM photos 
+        WHERE event_id = :event_id 
+        AND status = 'approved' 
+        AND id > :last_id 
+        ORDER BY id ASC";
 
-    // devolvemos el resultado al JavaScript en JSON bien limpio
-    echo json_encode($photos);
+$stmt = $pdo->prepare($sql);
+$stmt->execute([
+    ':event_id' => $idEvento,
+    ':last_id' => $last_id
+]);
 
-} catch (Exception $e) {
-    echo json_encode(['error' => 'Error al consultar las fotos: ' . $e->getMessage()]);
+$fotos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// 4. Formateamos la ruta para que Javi encuentre la carpeta (Vital del archivo viejo)
+$resultado = [];
+foreach ($fotos as $foto) {
+    $resultado[] = [
+        'id' => $foto['id'],
+        // Le añadimos la carpeta event_X/ al nombre
+        'ruta' => 'event_' . $idEvento . '/' . $foto['file_name'] 
+    ];
 }
+
+echo json_encode($resultado);
 ?>
