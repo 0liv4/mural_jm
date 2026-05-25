@@ -1,17 +1,9 @@
-// Referencias a las pantallas
-const pantallaAviso = document.getElementById('pantallaAviso');
-const pantallaCamara = document.getElementById('pantallaCamara');
-const pantallaError = document.getElementById('pantallaError');
-const pantallaPrevia = document.getElementById('pantallaPrevia');
-const pantallaExito = document.getElementById('pantallaExito');
-
-// Referencias a los elementos
-const btnAceptarAviso = document.getElementById('btnAceptarAviso');
-const video = document.getElementById('videoCamara');
-const btnCapturar = document.getElementById('btnCapturar');
-const canvas = document.getElementById('lienzoFoto');
+const canvas = document.getElementById('muralCanvas');
 const ctx = canvas.getContext('2d');
+const mensaje = document.getElementById('mensaje');
+const marquesina = document.querySelector('.marquesina');
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 
 navigator.mediaDevices.getUserMedia({ 
@@ -41,36 +33,30 @@ btnCapturar.addEventListener('click', function() {
 const btnRepetir = document.getElementById('btnRepetir');
 const btnEnviar = document.getElementById('btnEnviar');
 const btnVolverCamara = document.getElementById('btnVolverCamara');
+=======
+const qrContenedor = document.getElementById('qrContenedor');
+const qrImagen = document.getElementById('qrImagen');
+>>>>>>> 3b7b21e85c35cb387f349f2c50f457c9d99deb8b
 
-// Variable para guardar la foto temporalmente
-let fotoListaParaEnviar = null;
+let nombreEventoActual = "Cargando evento...";
+let fotosCollage = []; 
+const MAX_FOTOS = 4;   
 
-// 1. Aceptar permisos y encender cámara
-btnAceptarAviso.addEventListener('click', function() {
-    pantallaAviso.classList.remove('activa');
-    
-    navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } } 
-    })
-    .then(function(stream) {
-        pantallaCamara.classList.add('activa');
-        video.srcObject = stream;
-        video.setAttribute('playsinline', true); 
-        video.setAttribute('muted', true); 
-        video.muted = true; 
-        video.play(); 
-    })
-    .catch(function(error) {
-        console.error("Error con la cámara: ", error);
-        if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
-            pantallaError.classList.add('activa');
-        } else {
-            alert("Error técnico al intentar acceder a la cámara.");
-            pantallaAviso.classList.add('activa'); 
-        }
-    });
-});
+function cargarInfoEvento() {
+    fetch('../api/get-current-event.php?nocache=' + Date.now())
+        .then(res => res.json())
+        .then(datos => {
+            if(datos.exito) {
+                nombreEventoActual = datos.nombre;
+                marquesina.innerText = `¡Bienvenidos a ${nombreEventoActual}! Envíad vuestras fotos al escenario...`;
+            } else {
+                marquesina.innerText = "Esperando a que comience el evento...";
+            }
+        })
+        .catch(error => console.error("Error al buscar el nombre del evento:", error));
+}
 
+<<<<<<< HEAD
 // 2. Hacer la foto y mostrar previsualización
 btnCapturar.addEventListener('click', function() {
 >>>>>>> b918b8bf2bf959aeb3640094e4029a7d69f3ad12
@@ -129,24 +115,49 @@ btnCapturar.addEventListener('click', function() {
     pantallaCamara.classList.remove('activa');
     pantallaPrevia.classList.add('activa');
 });
+=======
+function actualizarMural() {
+    // 🛡️ BLINDAJE: Comprobamos si tu archivo data-manager.js ha cargado bien
+    if (typeof window.obtenerSiguienteFoto !== 'function') {
+        console.error("🚨 ALERTA MARCO: El archivo 'data-manager.js' no está cargando. Revisa que el nombre del archivo esté bien escrito y esté en la carpeta /js/");
+        return; // Detenemos la función para que no pete el resto del archivo
+    }
 
-// 3. Botón Repetir: Vuelve a la cámara
-btnRepetir.addEventListener('click', function() {
-    fotoListaParaEnviar = null; // Limpiamos la foto descartada
-    pantallaPrevia.classList.remove('activa');
-    pantallaCamara.classList.add('activa');
-});
+    const fotoElegida = window.obtenerSiguienteFoto();
+>>>>>>> 3b7b21e85c35cb387f349f2c50f457c9d99deb8b
 
-// 4. Botón Enviar: Manda la foto al servidor de Marco
-btnEnviar.addEventListener('click', function() {
-    
-    // Ponemos el botón en "estado de carga" visualmente
-    btnEnviar.disabled = true;
-    btnEnviar.innerText = "Enviando...";
+    if (fotoElegida && fotoElegida.ruta) {
+        const nuevaImg = new Image();
+        nuevaImg.src = '../uploads/' + fotoElegida.ruta;
+        
+        nuevaImg.onload = () => {
+            const nuevaFoto = {
+                img: nuevaImg,
+                alpha: 0,
+                escala: 0.85 + (Math.random() * 0.1), 
+                posX: -40 - (Math.random() * 100),    
+                posY: (Math.random() - 0.5) * 150,    
+                rotacion: (Math.random() - 0.5) * 0.4
+            };
 
-    const formData = new FormData();
-    formData.append('imagen', fotoListaParaEnviar);
+            fotosCollage.push(nuevaFoto);
 
+            if (fotosCollage.length > MAX_FOTOS) {
+                fotosCollage.shift(); 
+            }
+            
+            mensaje.style.display = 'none'; 
+            canvas.style.display = 'block'; 
+        };
+        
+        // Si la imagen falla al cargar (ej. ruta incorrecta), avisamos
+        nuevaImg.onerror = () => {
+            console.error("🚨 ALERTA MARCO: No se encuentra la imagen físicamente en la ruta: ../uploads/" + fotoElegida.ruta);
+        };
+    }
+}
+
+<<<<<<< HEAD
 >>>>>>> b918b8bf2bf959aeb3640094e4029a7d69f3ad12
     fetch('../api/upload-photo.php', {
         method: 'POST',
@@ -156,25 +167,74 @@ btnEnviar.addEventListener('click', function() {
     .then(data => {
         btnEnviar.disabled = false;
         btnEnviar.innerText = "Enviar foto";
+=======
+function animar() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+>>>>>>> 3b7b21e85c35cb387f349f2c50f457c9d99deb8b
 
-        if(data.success) {
-            // Si va bien, mostramos la pantalla de éxito
-            pantallaPrevia.classList.remove('activa');
-            pantallaExito.classList.add('activa');
-        } else {
-            alert("Error del servidor: " + data.error);
-        }
-    })
-    .catch(err => {
-        btnEnviar.disabled = false;
-        btnEnviar.innerText = "Enviar foto";
-        console.error("Error en la subida:", err);
-        alert("Fallo de conexión al intentar enviar la foto.");
+    fotosCollage.forEach(foto => {
+        if (foto.alpha < 1) foto.alpha += 0.02; 
+        foto.escala += 0.0001;                  
+        foto.posX += 0.15;                      
+
+        const maxWidth = canvas.width * 0.55;   
+        const maxHeight = canvas.height * 0.55;
+        let ratio = Math.min(maxWidth / foto.img.width, maxHeight / foto.img.height);
+        let drawWidth = foto.img.width * ratio;
+        let drawHeight = foto.img.height * ratio;
+
+        ctx.save();
+        ctx.globalAlpha = foto.alpha; 
+        ctx.translate((canvas.width / 2) + foto.posX, (canvas.height / 2) + foto.posY);
+        ctx.rotate(foto.rotacion);
+        ctx.scale(foto.escala, foto.escala); 
+
+        ctx.shadowColor = "rgba(0, 0, 0, 0.7)";
+        ctx.shadowBlur = 40;
+        ctx.shadowOffsetX = 20;
+        ctx.shadowOffsetY = 20;
+
+        const margen = 15;
+        const margenAbajo = 75;
+        ctx.fillStyle = "white";
+        ctx.fillRect(-drawWidth / 2 - margen, -drawHeight / 2 - margen, drawWidth + (margen * 2), drawHeight + margen + margenAbajo);
+
+        ctx.shadowColor = "transparent";
+        ctx.drawImage(foto.img, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
+        
+        ctx.fillStyle = "#333333"; 
+        ctx.font = "bold 35px 'Arial', sans-serif"; 
+        ctx.textAlign = "center";
+        ctx.fillText((nombreEventoActual || "IES BARAJAS").toUpperCase(), 0, (drawHeight / 2) + 45);
+
+        ctx.restore();
     });
-});
 
-// 5. Botón Volver (Hacer otra foto tras el éxito)
-btnVolverCamara.addEventListener('click', function() {
-    pantallaExito.classList.remove('activa');
-    pantallaCamara.classList.add('activa');
-});
+    requestAnimationFrame(animar);
+}
+
+function gestionarQR() {
+    console.log("Generando QR..."); // Chivato para saber que el QR intenta salir
+    const urlCamara = window.location.origin + "/mural_jm/public/camera.html";
+    qrImagen.src = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" + encodeURIComponent(urlCamara);
+
+    qrContenedor.style.display = "block";
+    qrContenedor.style.animation = "fade-in 1s forwards"; 
+
+    setTimeout(() => {
+        qrContenedor.style.display = "none";
+    }, 12000);
+}
+
+// ARRANQUE SEGURO
+cargarInfoEvento(); 
+setInterval(cargarInfoEvento, 10000); 
+
+actualizarMural();
+setInterval(actualizarMural, 5000); 
+
+// Si el script no ha petado, el QR saldrá sí o sí
+setTimeout(gestionarQR, 5000);
+setInterval(gestionarQR, 45000);
+
+animar();
